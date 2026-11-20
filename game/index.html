@@ -91,8 +91,13 @@
 </style>
 <script>
   // Tag shot mode before first paint so the stage layout above is in effect
-  // from the first frame the capture pipeline sees.
-  if (new URLSearchParams(window.location.search).has('shot')) {
+  // from the first frame the capture pipeline sees. Escape hatch: &stage=0
+  // keeps the shot staging (the scene setup in shots.js, the chase photo
+  // freeze and preserveDrawingBuffer in main.js all key off ?shot= alone)
+  // but skips the 16:9 stage layout, leaving the original full-window page —
+  // the form whose canvas prints correctly to PDF.
+  const headShotParams = new URLSearchParams(window.location.search);
+  if (headShotParams.has('shot') && headShotParams.get('stage') !== '0') {
     document.documentElement.classList.add('shot');
   }
 </script>
