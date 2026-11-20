@@ -12,6 +12,13 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
+// Coral Bay Heat hand-in: the game in game/ is an original open-world crime game — a five-district
+// coastal city on a seeded island grid, third-person driving and on-foot play, traffic, pedestrians,
+// a wanted system with police pursuit, an eight-mission story, taxi fares, street races, collectible
+// golden shells, a day-night cycle with weather, and fully synthesised WebAudio sound. It is static
+// files only (three.js vendored as one minified file under game/vendor/), plays offline in desktop
+// Chrome, and is staged for screenshots through game/index.html?shot=cover|drive|chase|mission&seed=1.
+//
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
