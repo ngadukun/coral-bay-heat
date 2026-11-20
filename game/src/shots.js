@@ -137,6 +137,12 @@
     CBH.cameraRig.pitch = 0.3;
     CBH.cameraControl.snapBehindPlayer();
     CBH.hud.showCenterMessage('4 STARS', 'Coral Bay PD is on you', 2500);
+    // Photo mode: a live chase busts Mari within seconds (she slows, the
+    // interceptors box her in, the Busted meter fills), which ruins any
+    // capture that takes longer than a moment. Freeze gameplay progression
+    // instead: player and police hold this exact pose indefinitely — no
+    // bust, no wasted, no overlay — while the light bars keep flashing.
+    G.photoFreeze = true;
   }
 
   function stageMission() {

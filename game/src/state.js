@@ -16,6 +16,7 @@
 
     mode: 'menu', // menu | play | pause | busted | wasted | won
     shotName: null,
+    photoFreeze: false, // staged chase scene: hold the pose forever (main.js)
     seed: 1,
 
     // day / weather

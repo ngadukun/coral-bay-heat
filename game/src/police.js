@@ -342,8 +342,18 @@
     G.wantedStars = starsForPoints(G.wantedPoints);
   }
 
+  // Photo mode only: keep the light bars flashing while every police car
+  // holds its staged position — no pursuit, no spawns, no busted meter.
+  function updateLightsOnly(dt) {
+    const G = CBH.G;
+    for (let i = 0; i < G.policeCars.length; i++) {
+      updatePoliceLights(G.policeCars[i], dt);
+    }
+  }
+
   window.CBH.police = {
     update: updatePolice,
+    updateLightsOnly: updateLightsOnly,
     clearWanted: clearWanted,
     setStars: setWantedStars,
     starsForPoints: starsForPoints,

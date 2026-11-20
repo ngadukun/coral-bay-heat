@@ -12,18 +12,31 @@
   CBH.rng.reseed(G.seed);
 
   const canvas = document.getElementById('game3d');
+  const stageEl = document.getElementById('stage');
+  // In shot mode the renderer fills the 16:9 #stage box (see index.html),
+  // not the window: the camera aspect and the drawing buffer both follow
+  // the stage, so a portrait capture's top band is a true 16:9 frame.
+  // Normal play has no stage styling and simply fills the window as before.
+  function viewSize() {
+    if (query.shot && stageEl && stageEl.clientWidth > 0 && stageEl.clientHeight > 0) {
+      return { w: stageEl.clientWidth, h: stageEl.clientHeight };
+    }
+    return { w: window.innerWidth, h: window.innerHeight };
+  }
+  const initialSize = viewSize();
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(initialSize.w, initialSize.h, false);
   renderer.outputEncoding = THREE.sRGBEncoding;
   G.renderer = renderer;
   G.scene = new THREE.Scene();
-  G.camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 1600);
+  G.camera = new THREE.PerspectiveCamera(58, initialSize.w / initialSize.h, 0.1, 1600);
   G.camera.position.set(-40, 4, 224);
   window.addEventListener('resize', function () {
-    G.camera.aspect = window.innerWidth / window.innerHeight;
+    const size = viewSize();
+    G.camera.aspect = size.w / size.h;
     G.camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(size.w, size.h, false);
   });
 
   // ---- build the world -----------------------------------------------------
@@ -143,7 +156,16 @@
     if (CBH.input.wasPressed('Escape') || CBH.input.wasPressed('KeyP')) {
       if (G.mode === 'play' || G.mode === 'pause') togglePause();
     }
-    if (G.mode === 'play') {
+    if (G.mode === 'play' && G.photoFreeze) {
+      // Photo mode (the staged chase scene): the pose is frozen solid — no
+      // driving, no pursuit steering, no collisions and no busted meter, so
+      // the frame can never decay into a bust or a wasted overlay no matter
+      // how long the capture takes. Only ambient animation advances: the
+      // police light bars keep flashing and the world clock that drives the
+      // water and lamp shimmer keeps ticking.
+      G.clockTime += dt;
+      CBH.police.updateLightsOnly(dt);
+    } else if (G.mode === 'play') {
       G.clockTime += dt;
       CBH.player.update(dt);
       CBH.traffic.update(dt);
@@ -183,7 +205,7 @@
       CBH.hud.advanceDialogue();
     }
 
-    CBH.sky.update(G.mode === 'play' ? dt : rawDt * 0.25);
+    CBH.sky.update(G.photoFreeze ? 0 : (G.mode === 'play' ? dt : rawDt * 0.25));
     CBH.city.update(dt, G.clockTime);
     CBH.particles.update(dt);
     CBH.particles.updateAmbient(dt);

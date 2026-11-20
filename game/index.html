@@ -71,9 +71,34 @@
   #missionCard { position: fixed; left: 50%; top: 30%; transform: translate(-50%,-50%); z-index: 15; background: rgba(6,20,12,.92); border: 2px solid #7dff9a; border-radius: 16px; padding: 22px 38px; text-align: center; color: #fff; display: none; pointer-events: none; }
   #missionCardTitle { font-size: 34px; font-weight: 900; color: #7dff9a; letter-spacing: 1px; }
   #missionCardSub { font-size: 18px; margin-top: 5px; color: #ffe9b8; font-weight: 700; }
+
+  /* ---------- Screenshot stage (only when a ?shot= query is present) ----------
+     The capture pipeline can only save portrait pages, but the dossier wants
+     1280x720 landscape frames. In shot mode every visual element lives inside
+     #stage, a 16:9 box pinned to the top-left of the page at full page width;
+     the renderer sizes itself to the stage (see main.js), so the top band of
+     a portrait capture is exactly the staged landscape frame and everything
+     below it is black page. Without ?shot= none of these rules apply and the
+     game fills the window exactly as before. */
+  html.shot, html.shot body { background: #000; }
+  html.shot #stage { position: absolute; top: 0; left: 0; width: 100%; height: 56.25vw; aspect-ratio: 16 / 9; overflow: hidden; background: #000; }
+  html.shot #game3d { position: absolute; }
+  html.shot #hud { position: absolute; }
+  html.shot #damageVignette, html.shot #fadeBlack { position: absolute; }
+  html.shot #dialogue { position: absolute; }
+  html.shot #missionCard { position: absolute; }
+  html.shot .screen { position: absolute; }
 </style>
+<script>
+  // Tag shot mode before first paint so the stage layout above is in effect
+  // from the first frame the capture pipeline sees.
+  if (new URLSearchParams(window.location.search).has('shot')) {
+    document.documentElement.classList.add('shot');
+  }
+</script>
 </head>
 <body>
+<div id="stage">
 <canvas id="game3d" aria-label="Coral Bay Heat: an open-world driving and on-foot game set in the coastal city of Coral Bay"></canvas>
 <p id="status" role="status" aria-live="polite"></p>
 
@@ -147,6 +172,7 @@
   <div id="endSub"></div>
   <button class="menuBtn" id="btnRespawn">CONTINUE</button>
 </div>
+</div><!-- /#stage -->
 
 <script src="./vendor/three.min.js"></script>
 <script src="./src/rng.js"></script>
