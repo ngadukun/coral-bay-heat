@@ -3,17 +3,172 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Block Dodger</title>
+<title>Coral Bay Heat</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #11141b; }
-  #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-  /* Read aloud, never shown: the status line screen readers announce. */
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1622; font-family: "Trebuchet MS", "Segoe UI", Verdana, sans-serif; }
+  #game3d { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
   #status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; color: #fff; z-index: 5; }
+  #hud.hidden, .hidden { display: none !important; }
+  #cashBox { position: absolute; top: 14px; right: 18px; text-align: right; text-shadow: 0 2px 6px rgba(0,0,0,.65); }
+  #cash { font-size: 30px; font-weight: 800; color: #7dff9a; letter-spacing: .5px; }
+  #clockLine { font-size: 14px; color: #ffe9b8; font-weight: 700; margin-top: 2px; }
+  #stars { font-size: 26px; letter-spacing: 3px; margin-top: 2px; min-height: 30px; }
+  #stars .on { color: #ffd23e; text-shadow: 0 0 10px rgba(255,180,0,.9); }
+  #stars .off { color: rgba(255,255,255,.28); }
+  #stars.searching .on { animation: starPulse 0.7s infinite alternate; }
+  @keyframes starPulse { from { opacity: 1; } to { opacity: .35; } }
+  #healthWrap { position: absolute; left: 18px; bottom: 196px; width: 190px; }
+  #healthLabel { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: #ffd9d9; text-shadow: 0 1px 4px #000; }
+  #healthBarOuter { height: 13px; background: rgba(0,0,0,.55); border: 2px solid rgba(255,255,255,.75); border-radius: 7px; overflow: hidden; }
+  #healthBar { height: 100%; width: 100%; background: linear-gradient(90deg, #ff5f6d, #ffc371); transition: width .15s; }
+  #bustedWrap { margin-top: 5px; display: none; }
+  #bustedBarOuter { height: 8px; background: rgba(0,0,0,.55); border: 1px solid #9fd8ff; border-radius: 5px; overflow: hidden; }
+  #bustedBar { height: 100%; width: 0%; background: #57b6ff; }
+  #minimapWrap { position: absolute; left: 18px; bottom: 18px; width: 168px; height: 168px; border: 3px solid rgba(255,255,255,.8); border-radius: 14px; overflow: hidden; box-shadow: 0 6px 22px rgba(0,0,0,.5); background: #2e7fb8; }
+  #minimap { width: 168px; height: 168px; display: block; }
+  #weaponBox { position: absolute; right: 18px; bottom: 18px; text-align: right; text-shadow: 0 2px 6px rgba(0,0,0,.7); }
+  #weaponName { font-size: 17px; font-weight: 800; letter-spacing: 1px; }
+  #ammoLine { font-size: 24px; font-weight: 800; color: #ffe9b8; }
+  #shellLine { font-size: 14px; font-weight: 700; color: #ffe98a; margin-top: 3px; }
+  #objectiveWrap { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); max-width: 560px; text-align: center; }
+  #objectiveLabel { font-size: 11px; font-weight: 800; letter-spacing: 3px; color: #ffd23e; text-shadow: 0 1px 5px #000; }
+  #objectiveText { font-size: 19px; font-weight: 700; color: #fff; text-shadow: 0 2px 7px rgba(0,0,0,.85); margin-top: 2px; }
+  #missionTimer { font-size: 22px; font-weight: 800; color: #ffb3b3; text-shadow: 0 2px 6px #000; margin-top: 2px; }
+  #prompt { position: absolute; left: 50%; bottom: 132px; transform: translateX(-50%); background: rgba(8,20,32,.78); border: 1px solid rgba(255,255,255,.5); border-radius: 9px; padding: 7px 16px; font-size: 16px; font-weight: 700; display: none; }
+  #prompt b { color: #ffd23e; }
+  #toast { position: absolute; left: 50%; top: 108px; transform: translateX(-50%); background: rgba(8,30,18,.85); border: 1px solid #7dff9a; color: #d9ffe2; border-radius: 9px; padding: 8px 20px; font-size: 17px; font-weight: 700; display: none; }
+  #centerMsg { position: absolute; left: 50%; top: 34%; transform: translate(-50%,-50%); text-align: center; display: none; }
+  #centerTitle { font-size: 54px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 4px 18px rgba(0,0,0,.8); }
+  #centerSub { font-size: 19px; font-weight: 700; color: #ffe9b8; text-shadow: 0 2px 8px #000; margin-top: 4px; }
+  #damageVignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(200,0,0,.55) 100%); opacity: 0; z-index: 6; }
+  #fadeBlack { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .5s; z-index: 7; }
+
+  /* ---------- Dialogue ---------- */
+  #dialogue { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); width: min(680px, 92vw); background: rgba(6,16,26,.92); border: 2px solid rgba(255,210,62,.75); border-radius: 14px; padding: 14px 18px; display: none; z-index: 9; color: #fff; pointer-events: none; }
+  #dialogueAvatar { float: left; width: 54px; height: 54px; border-radius: 50%; margin-right: 14px; border: 2px solid rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; color: rgba(0,0,0,.55); }
+  #dialogueName { font-size: 14px; font-weight: 800; letter-spacing: 1px; color: #ffd23e; }
+  #dialogueText { font-size: 17px; line-height: 1.45; margin-top: 3px; min-height: 48px; }
+  #dialogueHint { font-size: 12px; color: rgba(255,255,255,.65); text-align: right; margin-top: 4px; }
+
+  /* ---------- Menus ---------- */
+  .screen { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; text-align: center; }
+  #startScreen { background: linear-gradient(180deg, rgba(255,140,66,.28), rgba(10,24,44,.88) 70%); }
+  #gameTitle { font-size: 74px; font-weight: 900; letter-spacing: 3px; margin: 0; color: #fff; text-shadow: 0 0 26px rgba(255,120,60,.85), 0 6px 0 rgba(146,43,110,.9), 0 12px 34px rgba(0,0,0,.7); }
+  #gameSub { font-size: 20px; color: #ffe9b8; font-weight: 700; letter-spacing: 4px; margin: 6px 0 22px; text-shadow: 0 2px 8px #000; }
+  .menuBtn { pointer-events: auto; cursor: pointer; display: block; width: 280px; margin: 7px auto; padding: 13px 0; font-size: 20px; font-weight: 800; letter-spacing: 1px; color: #08222e; background: linear-gradient(180deg, #ffe98a, #ffb52e); border: none; border-radius: 11px; box-shadow: 0 5px 0 #a86e00, 0 10px 22px rgba(0,0,0,.45); }
+  .menuBtn:hover { filter: brightness(1.08); }
+  .menuBtn:disabled { filter: grayscale(.8); opacity: .55; cursor: default; }
+  .menuBtn.secondary { background: linear-gradient(180deg, #bfe9ff, #5db6e8); box-shadow: 0 5px 0 #2b6ea3, 0 10px 22px rgba(0,0,0,.45); }
+  #introCard { max-width: 620px; background: rgba(6,16,26,.82); border: 1px solid rgba(255,255,255,.35); border-radius: 14px; padding: 16px 22px; margin-top: 20px; font-size: 16px; line-height: 1.55; }
+  #controlsCard { max-width: 620px; margin-top: 12px; font-size: 14px; line-height: 1.7; color: #dff3ff; background: rgba(6,16,26,.6); border-radius: 12px; padding: 10px 18px; }
+  #controlsCard b { color: #ffd23e; }
+  #pauseScreen, #endScreen { background: rgba(4,10,18,.78); display: none; }
+  #pauseTitle, #endTitle { font-size: 46px; font-weight: 900; letter-spacing: 2px; margin: 0 0 8px; text-shadow: 0 4px 16px #000; }
+  #pauseStats, #endSub { font-size: 17px; line-height: 1.8; color: #dff3ff; margin-bottom: 16px; }
+  #missionCard { position: fixed; left: 50%; top: 30%; transform: translate(-50%,-50%); z-index: 15; background: rgba(6,20,12,.92); border: 2px solid #7dff9a; border-radius: 16px; padding: 22px 38px; text-align: center; color: #fff; display: none; pointer-events: none; }
+  #missionCardTitle { font-size: 34px; font-weight: 900; color: #7dff9a; letter-spacing: 1px; }
+  #missionCardSub { font-size: 18px; margin-top: 5px; color: #ffe9b8; font-weight: 700; }
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Block Dodger: move the paddle left and right to dodge falling blocks and catch coins"></canvas>
+<canvas id="game3d" aria-label="Coral Bay Heat: an open-world driving and on-foot game set in the coastal city of Coral Bay"></canvas>
 <p id="status" role="status" aria-live="polite"></p>
-<script type="module" src="./src/main.js"></script>
+
+<div id="hud" class="hidden">
+  <div id="cashBox">
+    <div id="cash">$0</div>
+    <div id="stars"></div>
+    <div id="clockLine">12:00</div>
+  </div>
+  <div id="objectiveWrap">
+    <div id="objectiveLabel"></div>
+    <div id="objectiveText"></div>
+    <div id="missionTimer"></div>
+  </div>
+  <div id="healthWrap">
+    <div id="healthLabel">HEALTH</div>
+    <div id="healthBarOuter"><div id="healthBar"></div></div>
+    <div id="bustedWrap"><div id="bustedBarOuter"><div id="bustedBar"></div></div></div>
+  </div>
+  <div id="minimapWrap"><canvas id="minimap" width="336" height="336"></canvas></div>
+  <div id="weaponBox">
+    <div id="weaponName">FISTS</div>
+    <div id="ammoLine"></div>
+    <div id="shellLine">🐚 0 / 20</div>
+  </div>
+  <div id="prompt"></div>
+  <div id="toast"></div>
+  <div id="centerMsg"><div id="centerTitle"></div><div id="centerSub"></div></div>
+</div>
+<div id="damageVignette"></div>
+<div id="fadeBlack"></div>
+
+<div id="dialogue">
+  <div id="dialogueAvatar">?</div>
+  <div id="dialogueName"></div>
+  <div id="dialogueText"></div>
+  <div id="dialogueHint">Press E or click to continue</div>
+</div>
+
+<div id="missionCard">
+  <div id="missionCardTitle">MISSION COMPLETE</div>
+  <div id="missionCardSub"></div>
+</div>
+
+<div id="startScreen" class="screen">
+  <h1 id="gameTitle">CORAL BAY HEAT</h1>
+  <div id="gameSub">A GETAWAY DRIVER'S DEBT</div>
+  <button class="menuBtn" id="btnNewGame">NEW GAME</button>
+  <button class="menuBtn secondary" id="btnContinue">CONTINUE</button>
+  <div id="introCard">Marina "Mari" Solano was the best getaway driver on the coast — until she
+  retired owing money to the wrong people. Now she is home in Coral Bay, and the debt
+  collectors want it paid in work, not words. Drive, run, fight and hustle through eight
+  jobs, from collecting debts in the Suburbs to one last harbour heist, and buy back her freedom.</div>
+  <div id="controlsCard">
+    <b>WASD</b> move / drive &nbsp; <b>Mouse</b> orbit camera (click the game to lock) &nbsp; <b>Shift</b> sprint<br>
+    <b>Space</b> jump / handbrake &nbsp; <b>E</b> enter car, talk, confirm &nbsp; <b>Click</b> punch / fire pistol<br>
+    <b>Esc</b> pause &nbsp; <b>F</b> fire pistol &nbsp; Watch your wanted stars — lose the police to cool the heat.
+  </div>
+</div>
+
+<div id="pauseScreen" class="screen">
+  <h2 id="pauseTitle">PAUSED</h2>
+  <div id="pauseStats"></div>
+  <button class="menuBtn" id="btnResume">RESUME</button>
+  <button class="menuBtn secondary" id="btnSave">SAVE GAME</button>
+  <button class="menuBtn secondary" id="btnRestart">RESTART STORY</button>
+</div>
+
+<div id="endScreen" class="screen">
+  <h2 id="endTitle">BUSTED</h2>
+  <div id="endSub"></div>
+  <button class="menuBtn" id="btnRespawn">CONTINUE</button>
+</div>
+
+<script src="./vendor/three.min.js"></script>
+<script src="./src/rng.js"></script>
+<script src="./src/config.js"></script>
+<script src="./src/state.js"></script>
+<script src="./src/input.js"></script>
+<script src="./src/save.js"></script>
+<script src="./src/sound.js"></script>
+<script src="./src/sky.js"></script>
+<script src="./src/city.js"></script>
+<script src="./src/cars.js"></script>
+<script src="./src/traffic.js"></script>
+<script src="./src/pedestrians.js"></script>
+<script src="./src/combat.js"></script>
+<script src="./src/player.js"></script>
+<script src="./src/police.js"></script>
+<script src="./src/particles.js"></script>
+<script src="./src/camera.js"></script>
+<script src="./src/missions-data.js"></script>
+<script src="./src/missions.js"></script>
+<script src="./src/hud.js"></script>
+<script src="./src/shots.js"></script>
+<script src="./src/main.js"></script>
 </body>
 </html>
