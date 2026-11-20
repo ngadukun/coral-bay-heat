@@ -24,7 +24,12 @@
     return { w: window.innerWidth, h: window.innerHeight };
   }
   const initialSize = viewSize();
-  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  // Shot mode keeps the last rendered frame in the drawing buffer
+  // (preserveDrawingBuffer) so a print/PDF snapshot of the page captures
+  // the 3D canvas instead of a cleared black rectangle. Normal play keeps
+  // the default (false) — the flag costs a little performance and is only
+  // worth it for staged captures.
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, preserveDrawingBuffer: !!query.shot });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(initialSize.w, initialSize.h, false);
   renderer.outputEncoding = THREE.sRGBEncoding;
@@ -218,4 +223,16 @@
     CBH.input.endFrame();
   }
   requestAnimationFrame(frame);
+  if (query.shot) {
+    // A print/PDF capture can run while the tab reports itself hidden or
+    // occluded, where requestAnimationFrame is throttled to a halt and no
+    // fresh frame would ever reach the canvas. In shot mode only, drive
+    // the same frame function from a timer fallback whenever rAF has gone
+    // quiet, so the staged scene keeps drawing for the snapshot. A visible
+    // tab never triggers it (frames arrive faster than the threshold), so
+    // the cadence there is unchanged.
+    setInterval(function () {
+      if (performance.now() - lastTimestamp > 250) frame(performance.now());
+    }, 100);
+  }
 })();
