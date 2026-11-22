@@ -136,3 +136,9 @@ from the `seed` parameter, so the same URL always produces the same frame.
   summary the judge reads, using the vendored library in
   `vendor/makefun-game.ts`. Node's standard library only — no install
   step, no network.
+
+## Harbor Nights update
+
+- Harbor Nights missions pack: Valen Cruz hires Mari for three off-the-books harbor jobs — Neon Manifest, Armored Courtesy, and Harbor Lights — that pay down her debt to Severo Luna.
+- Neon buoys: twelve glowing collectibles bob just off the shore near landmarks; drift within range to light one for +$25 and track progress on the on-screen chip, with progress saved between sessions.
+- Night fireworks: ambient bursts bloom over the bay near the marina while you play at night, fading and cleaning themselves up automatically.
